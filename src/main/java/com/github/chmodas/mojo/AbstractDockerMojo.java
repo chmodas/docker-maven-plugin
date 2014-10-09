@@ -39,6 +39,13 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
      */
     @Parameter(property = "docker.images")
     protected List<Image> images;
+
+    /**
+     * Namespace prefix used for isolation.
+     */
+    @Parameter(property = "docker.prefix", defaultValue = "${project.artifactId}")
+    protected String prefix;
+
     /**
      * Docker will auto pull any configured image. Set this to false to prevent that.
      */
@@ -78,6 +85,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
      */
     protected abstract void executeMojo(DockerClient dockerClient) throws MojoFailureException, MojoExecutionException;
 
+    /**
+     * Configure and initialize the DockerClient.
+     *
+     * @return DockerClient
+     */
     private DockerClient getDockerClient() {
         DockerClientConfig.DockerClientConfigBuilder builder = new DockerClientConfig.DockerClientConfigBuilder().withUri(url.toString());
 
