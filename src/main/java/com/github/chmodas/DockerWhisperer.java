@@ -3,8 +3,11 @@ package com.github.chmodas;
 import com.github.chmodas.mojo.objects.Image;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.model.Container;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DockerWhisperer {
     private final DockerClient dockerClient;
@@ -40,5 +43,35 @@ public class DockerWhisperer {
         for (Image x : images) {
             dockerClient.pullImageCmd(x.getRegistry()).withTag(x.getTag()).exec();
         }
+    }
+
+    /**
+     * Forcefully remove the specified containers.
+     * TODO: parametize this, might have cases where you want them running after the tests are finished
+     *
+     * @param images
+     */
+    public void stopContainers(List<Image> images) {
+        Map<String, String> containerIds = getStartedContainerIds();
+
+        for (Image x : images) {
+            if (containerIds.containsKey(x.getName())) {
+                dockerClient.removeContainerCmd(containerIds.get(x.getName())).withForce(true).exec();
+            }
+        }
+    }
+
+    private Map<String, String> getStartedContainerIds() {
+        Map<String, String> containersIds = new HashMap<>();
+
+        List<Container> containers = dockerClient.listContainersCmd().withShowAll(true).exec();
+        for (Container x : containers) {
+            if (x.getNames()[0].contains("/" + prefix + "-")) {
+                String nameWithoutPrefix = x.getNames()[0].replace("/" + prefix + "-", "");
+                containersIds.put(nameWithoutPrefix, x.getId());
+            }
+        }
+
+        return containersIds;
     }
 }
