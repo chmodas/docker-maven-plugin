@@ -11,6 +11,7 @@ public class Image {
     private String name;
     private String registry;
     private String tag;
+    private String command;
 
     public Image() {
     }
@@ -41,6 +42,14 @@ public class Image {
 
     public void setTag(String tag) {
         this.tag = tag;
+    }
+
+    public String getCommand() {
+        return command;
+    }
+
+    public void setCommand(String command) {
+        this.command = command;
     }
 
     // TODO: not sure how much I like this
