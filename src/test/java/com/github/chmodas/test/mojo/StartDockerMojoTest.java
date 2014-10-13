@@ -4,6 +4,9 @@ package com.github.chmodas.test.mojo;
 import com.github.chmodas.mojo.StartDockerMojo;
 import com.github.chmodas.mojo.objects.Image;
 import com.github.dockerjava.api.command.InspectContainerResponse;
+import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.Ports;
+import org.apache.maven.plugin.MojoExecutionException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +19,34 @@ public class StartDockerMojoTest extends BaseTest {
 
     private StartDockerMojo getMojo() throws Exception {
         return (StartDockerMojo) lookupMojo("start", pomFile);
+    }
+
+    private Image genImageObj(String name) {
+        Image image = new Image();
+        image.setName(name);
+        image.setRegistry("busybox");
+        image.setTag("latest");
+        image.setCommand("sleep 999");
+        return image;
+    }
+
+    public void testThatAnExceptionIsThrownIfThereIsNoRegistryEntry() throws Exception {
+        mojo = getMojo();
+
+        List<Image> images = new ArrayList<>();
+        final Image image = new Image();
+        image.setName("boohoo");
+        image.setTag("latest");
+        image.setCommand("sleep 999");
+        images.add(image);
+        setVariableValueToObject(mojo, "images", images);
+
+        try {
+            mojo.execute();
+            fail("MojoExecutionException is not thrown.");
+        } catch (MojoExecutionException e) {
+            assertThat(e.getMessage(), is(equalTo("image.registry must not be null.")));
+        }
     }
 
     public void testCanStartContainer() throws Exception {
@@ -92,5 +123,46 @@ public class StartDockerMojoTest extends BaseTest {
         assertThat(response.getConfig().getCmd().length, is(equalTo(2)));
         assertThat(response.getConfig().getCmd()[0], is(equalTo("sleep")));
         assertThat(response.getConfig().getCmd()[1], is(equalTo("999")));
+    }
+
+    public void testThatAnExceptionIsThrowWhenThePortMappingEntriesDoNotMatchTheSupportedFormat() throws Exception {
+        mojo = getMojo();
+
+        List<Image> images = new ArrayList<>();
+        Image image = genImageObj("boohoo");
+        image.setPorts(new ArrayList<String>() {{
+            add("80");
+        }});
+        images.add(image);
+        setVariableValueToObject(mojo, "images", images);
+
+        try {
+            mojo.execute();
+            fail("MojoExecutionException not thrown.");
+        } catch (MojoExecutionException e) {
+            assertThat(e.getMessage(), is(equalTo("Invalid port mapping '80'.Port mapping must be given in the format <hostPort>:<exposedPort> (e.g. 80:80).")));
+        }
+    }
+
+    public void testCanBindPorts() throws Exception {
+        mojo = getMojo();
+
+        List<Image> images = new ArrayList<>();
+        Image image = genImageObj("boohoo");
+        image.setPorts(new ArrayList<String>() {{
+            add("80:80");
+            add("443:443");
+        }});
+        images.add(image);
+        setVariableValueToObject(mojo, "images", images);
+
+        mojo.execute();
+
+        String containerId = getContainerIdByName("boohoo");
+        assertThat(containerId, is(not(nullValue())));
+
+        InspectContainerResponse response = dockerClient.inspectContainerCmd(containerId).exec();
+        assertThat(response.getHostConfig().getPortBindings().getBindings().get(ExposedPort.tcp(80)), is(equalTo(Ports.Binding(80))));
+        assertThat(response.getHostConfig().getPortBindings().getBindings().get(ExposedPort.tcp(443)), is(equalTo(Ports.Binding(443))));
     }
 }
