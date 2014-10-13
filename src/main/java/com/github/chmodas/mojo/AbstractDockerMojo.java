@@ -70,8 +70,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
         }
 
         try {
-            validateImageConfiguration(images);
-
             executeMojo(getDockerClient());
         } catch (DockerException e) {
             throw new MojoFailureException(e.getMessage(), e);
@@ -100,17 +98,5 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
         }
 
         return DockerClientBuilder.getInstance(builder.build()).build();
-    }
-
-    /**
-     * Perform validation for the images configuration.
-     *
-     * @param images List of images
-     * @throws MojoFailureException
-     */
-    private void validateImageConfiguration(List<Image> images) throws MojoFailureException {
-        for (Image x : images) {
-            x.validate();
-        }
     }
 }

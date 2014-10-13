@@ -1,17 +1,13 @@
 package com.github.chmodas.mojo.objects;
 
-import org.apache.maven.plugin.MojoFailureException;
-
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 
 public class Image {
     private String name;
     private String registry;
     private String tag;
     private String command;
+    private List<String> ports;
 
     public Image() {
     }
@@ -25,10 +21,6 @@ public class Image {
     }
 
     public String getRegistry() {
-        if (registry == null) {
-            throw new IllegalArgumentException("image.registry must not be null when invoking docker:start");
-        }
-
         return registry;
     }
 
@@ -52,16 +44,11 @@ public class Image {
         this.command = command;
     }
 
-    // TODO: not sure how much I like this
-    public void validate() throws MojoFailureException {
-        try {
-            for (PropertyDescriptor x : Introspector.getBeanInfo(Image.class).getPropertyDescriptors()) {
-                if (x.getReadMethod() != null && !"class".equals(x.getName())) {
-                    x.getReadMethod().invoke(this);
-                }
-            }
-        } catch (IntrospectionException | IllegalAccessException | InvocationTargetException e) {
-            throw new MojoFailureException(e.getCause().getMessage(), e);
-        }
+    public List<String> getPorts() {
+        return ports;
+    }
+
+    public void setPorts(List<String> ports) {
+        this.ports = ports;
     }
 }
