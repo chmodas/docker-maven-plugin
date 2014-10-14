@@ -1,4 +1,4 @@
-package com.github.chmodas.test.mojo;
+package com.github.chmodas.test;
 
 
 import com.github.chmodas.mojo.StartDockerMojo;
@@ -17,8 +17,10 @@ import static org.hamcrest.Matchers.*;
 public class StartDockerMojoTest extends BaseTest {
     private StartDockerMojo mojo;
 
-    private StartDockerMojo getMojo() throws Exception {
-        return (StartDockerMojo) lookupMojo("start", pomFile);
+    public void setUp() throws Exception {
+        super.setUp();
+
+        mojo = (StartDockerMojo) lookupMojo("start", pomFile);
     }
 
     private Image genImageObj(String name) {
@@ -31,10 +33,8 @@ public class StartDockerMojoTest extends BaseTest {
     }
 
     public void testThatAnExceptionIsThrownIfThereIsNoRegistryEntry() throws Exception {
-        mojo = getMojo();
-
         List<Image> images = new ArrayList<>();
-        final Image image = new Image();
+        Image image = new Image();
         image.setName("boohoo");
         image.setTag("latest");
         image.setCommand("sleep 999");
@@ -50,17 +50,9 @@ public class StartDockerMojoTest extends BaseTest {
     }
 
     public void testCanStartContainer() throws Exception {
-        mojo = getMojo();
-
         List<Image> images = new ArrayList<>();
-
-        final Image img = new Image();
-        img.setName("boohoo");
-        img.setRegistry("busybox");
-        img.setTag("latest");
-        img.setCommand("sleep 999");
-
-        images.add(img);
+        Image image = genImageObj("boohoo");
+        images.add(image);
         setVariableValueToObject(mojo, "images", images);
 
         mojo.execute();
@@ -78,25 +70,11 @@ public class StartDockerMojoTest extends BaseTest {
     }
 
     public void testCanStartMultipleContainers() throws Exception {
-        mojo = getMojo();
-
         List<Image> images = new ArrayList<>();
-
-        final Image img1 = new Image();
-        img1.setName("boohoo");
-        img1.setRegistry("busybox");
-        img1.setTag("latest");
-        img1.setCommand("sleep 999");
-
-        final Image img2 = new Image();
-        img2.setName("woohoo");
-        img2.setRegistry("busybox");
-        img2.setTag("latest");
-        img2.setCommand("sleep 999");
-
-        images.add(img1);
-        images.add(img2);
-
+        Image image1 = genImageObj("boohoo");
+        Image image2 = genImageObj("woohoo");
+        images.add(image1);
+        images.add(image2);
         setVariableValueToObject(mojo, "images", images);
 
         mojo.execute();
@@ -112,7 +90,6 @@ public class StartDockerMojoTest extends BaseTest {
         assertThat(response.getConfig().getCmd()[0], is(equalTo("sleep")));
         assertThat(response.getConfig().getCmd()[1], is(equalTo("999")));
 
-
         String container2Id = getContainerIdByName("woohoo");
         assertThat(container2Id, is(not(nullValue())));
 
@@ -126,8 +103,6 @@ public class StartDockerMojoTest extends BaseTest {
     }
 
     public void testThatAnExceptionIsThrowWhenThePortMappingEntriesDoNotMatchTheSupportedFormat() throws Exception {
-        mojo = getMojo();
-
         List<Image> images = new ArrayList<>();
         Image image = genImageObj("boohoo");
         image.setPorts(new ArrayList<String>() {{
@@ -140,13 +115,31 @@ public class StartDockerMojoTest extends BaseTest {
             mojo.execute();
             fail("MojoExecutionException not thrown.");
         } catch (MojoExecutionException e) {
-            assertThat(e.getMessage(), is(equalTo("Invalid port mapping '80'.Port mapping must be given in the format <hostPort>:<exposedPort> (e.g. 80:80).")));
+            assertThat(e.getMessage(), is(equalTo("Invalid port mapping '80'. Port mapping must be given in the format <hostPort>:<exposedPort> (e.g. 80:80).")));
         }
     }
 
-    public void testCanBindPorts() throws Exception {
-        mojo = getMojo();
+    public void testThatAnExceptionIsThrownWhenTheSameHostPortIsUsedMultipleTimes() throws Exception {
+        List<Image> images = new ArrayList<>();
+        List<String> ports = new ArrayList<>();
+        ports.add("80:80");
+        Image image1 = genImageObj("boohoo");
+        Image image2 = genImageObj("woohoo");
+        image1.setPorts(ports);
+        image2.setPorts(ports);
+        images.add(image1);
+        images.add(image2);
+        setVariableValueToObject(mojo, "images", images);
 
+        try {
+            mojo.execute();
+            fail("MojoExceutionException not thrown");
+        } catch (MojoExecutionException e) {
+            assertThat(e.getMessage(), is(equalTo("The port '80' is specified for use in multiple containers. One cannot run multiple containers that use the same port on the same host.")));
+        }
+    }
+
+    public void testCanBindStaticAssignedPorts() throws Exception {
         List<Image> images = new ArrayList<>();
         Image image = genImageObj("boohoo");
         image.setPorts(new ArrayList<String>() {{

@@ -1,4 +1,4 @@
-package com.github.chmodas.test.mojo;
+package com.github.chmodas.test;
 
 
 import com.github.chmodas.mojo.StopDockerMojo;

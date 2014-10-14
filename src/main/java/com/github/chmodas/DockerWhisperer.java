@@ -7,6 +7,7 @@ import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.Ports;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,6 +20,13 @@ import java.util.Map;
 public class DockerWhisperer {
     private final DockerClient dockerClient;
     private final String prefix;
+    private MavenProject mavenProject;
+
+    public DockerWhisperer(DockerClient dockerClient, MavenProject mavenProject, String prefix) {
+        this.dockerClient = dockerClient;
+        this.mavenProject = mavenProject;
+        this.prefix = prefix;
+    }
 
     public DockerWhisperer(DockerClient dockerClient, String prefix) {
         this.dockerClient = dockerClient;
@@ -38,14 +46,14 @@ public class DockerWhisperer {
                 try {
                     String[] ps = port.split(":", 2);
                     if (ps.length != 2) {
-                        throw new MojoExecutionException("Invalid port mapping '" + port + "'." +
+                        throw new MojoExecutionException("Invalid port mapping '" + port + "'. " +
                                                          "Port mapping must be given in the format <hostPort>:<exposedPort> (e.g. 80:80).");
                     }
 
                     Integer hostPort = Integer.parseInt(ps[0]);
                     for (Map<Integer, Integer> ports : portMapping.values()) {
                         if (ports.containsKey(hostPort)) {
-                            throw new MojoExecutionException("The port '" + hostPort + "' is specified for use in multiple containers." +
+                            throw new MojoExecutionException("The port '" + hostPort + "' is specified for use in multiple containers. " +
                                                              "One cannot run multiple containers that use the same port on the same host.");
                         }
                     }
@@ -61,7 +69,7 @@ public class DockerWhisperer {
                     portMapping.put(image.getName(), exposedToHostPort);
 
                 } catch (NumberFormatException e) {
-                    throw new MojoExecutionException("Invalid port mapping '" + port + "'." +
+                    throw new MojoExecutionException("Invalid port mapping '" + port + "'. " +
                                                      "Port mapping must be given in the format <hostPort>:<exposedPort> (e.g. 80:80).");
                 }
             }
@@ -117,7 +125,6 @@ public class DockerWhisperer {
             dockerClient.startContainerCmd(container.getId())
                         .withPortBindings(portBindings)
                         .exec();
-
         }
     }
 
@@ -132,7 +139,7 @@ public class DockerWhisperer {
      * TODO: parametize this, might have cases where you want them running after the tests are finished,
      * or might not want to force the removal
      *
-     * @param images
+     * @param images List of images
      */
     public void stopContainers(List<Image> images) {
         Map<String, String> containerIds = getStartedContainerIds();

@@ -11,7 +11,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 public class StartDockerMojo extends AbstractDockerMojo {
     @Override
     public void executeMojo(DockerClient dockerClient) throws MojoExecutionException, MojoFailureException {
-        DockerWhisperer whisperer = new DockerWhisperer(dockerClient, prefix);
+        DockerWhisperer whisperer = new DockerWhisperer(dockerClient, project, prefix);
         whisperer.startContainers(images, pullImages);
     }
 }

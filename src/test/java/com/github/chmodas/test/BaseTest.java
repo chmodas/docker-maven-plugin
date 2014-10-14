@@ -1,6 +1,7 @@
-package com.github.chmodas.test.mojo;
+package com.github.chmodas.test;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.InternalServerErrorException;
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
@@ -58,8 +59,16 @@ public abstract class BaseTest extends AbstractMojoTestCase {
          */
         for (Container x : getContainerList()) {
             if (!containerIds.contains(x.getId()) && x.getNames()[0].contains("/chmodas-test-")) {
-                dockerClient.removeContainerCmd(x.getId()).withForce(true).exec();
-                containerIds.remove(x.getId());
+                try {
+                    dockerClient.removeContainerCmd(x.getId()).withForce(true).exec();
+                    containerIds.remove(x.getId());
+                } catch (InternalServerErrorException e) {
+                    if (e.getMessage().contains("Driver devicemapper failed to remove root filesystem")) {
+                        // Known Docker "issue", in fact the device gets removed. Can just ignore it here.
+                    } else {
+                        throw new InternalServerErrorException(e);
+                    }
+                }
             }
         }
     }
