@@ -2,6 +2,7 @@ package com.github.chmodas;
 
 import com.github.chmodas.mojo.objects.Image;
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.InternalServerErrorException;
 import com.github.dockerjava.api.NotModifiedException;
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.CreateContainerResponse;
@@ -111,12 +112,19 @@ public class DockerWhisperer {
             if (containerIds.containsKey(x.getName())) {
                 String containerId = containerIds.get(x.getName());
                 try {
-                    dockerClient.stopContainerCmd(containerId).withTimeout(2).exec();
-                } catch (NotModifiedException e) {
-                    // Container already stopped.
+                    try {
+                        dockerClient.stopContainerCmd(containerId).withTimeout(2).exec();
+                    } catch (NotModifiedException e) {
+                        // Container already stopped.
+                    }
+                    dockerClient.removeContainerCmd(containerIds.get(x.getName())).withForce(true).exec();
+                } catch (InternalServerErrorException e) {
+                    if (e.getMessage().contains("Driver devicemapper failed to remove root filesystem")) {
+                        if (getStartedContainerIds().get(x.getName()) == null) {
+                            // This issue is really annoying
+                        }
+                    }
                 }
-
-                dockerClient.removeContainerCmd(containerIds.get(x.getName())).withForce(true).exec();
             }
         }
     }

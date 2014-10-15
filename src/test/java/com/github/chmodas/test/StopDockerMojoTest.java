@@ -5,7 +5,6 @@ import com.github.chmodas.mojo.StopDockerMojo;
 import com.github.chmodas.mojo.objects.Image;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.InspectContainerResponse;
-import com.github.dockerjava.api.model.Container;
 
 import java.util.ArrayList;
 import java.util.List;
