@@ -2,6 +2,7 @@ package com.github.chmodas;
 
 import com.github.chmodas.mojo.objects.Image;
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.NotModifiedException;
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.model.Container;
@@ -99,9 +100,7 @@ public class DockerWhisperer {
     }
 
     /**
-     * Forcefully remove the specified containers.
-     * TODO: parametize this, might have cases where you want them running after the tests are finished,
-     * or might not want to force the removal
+     * Stop the containers gracefully.
      *
      * @param images List of images
      */
@@ -110,6 +109,13 @@ public class DockerWhisperer {
 
         for (Image x : images) {
             if (containerIds.containsKey(x.getName())) {
+                String containerId = containerIds.get(x.getName());
+                try {
+                    dockerClient.stopContainerCmd(containerId).withTimeout(2).exec();
+                } catch (NotModifiedException e) {
+                    // Container already stopped.
+                }
+
                 dockerClient.removeContainerCmd(containerIds.get(x.getName())).withForce(true).exec();
             }
         }

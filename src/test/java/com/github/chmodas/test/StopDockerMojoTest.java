@@ -4,6 +4,8 @@ package com.github.chmodas.test;
 import com.github.chmodas.mojo.StopDockerMojo;
 import com.github.chmodas.mojo.objects.Image;
 import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.command.InspectContainerResponse;
+import com.github.dockerjava.api.model.Container;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,14 +21,16 @@ public class StopDockerMojoTest extends BaseTest {
     }
 
     public void testCanStopContainers() throws Exception {
-        CreateContainerResponse container = dockerClient
+        CreateContainerResponse createContainerResponse = dockerClient
                 .createContainerCmd("busybox:latest")
                 .withName("chmodas-test-boohoo")
                 .withCmd("sleep 999".split(" "))
                 .exec();
-        dockerClient.startContainerCmd(container.getId());
+        dockerClient.startContainerCmd(createContainerResponse.getId()).exec();
 
         assertThat(getContainerIdByName("boohoo"), is(not(nullValue())));
+        InspectContainerResponse containerResponse = dockerClient.inspectContainerCmd(getContainerIdByName("boohoo")).exec();
+        assertThat(containerResponse.getState().isRunning(), is(equalTo(true)));
 
         mojo = getMojo();
 
@@ -37,12 +41,10 @@ public class StopDockerMojoTest extends BaseTest {
         img.setTag("latest");
         img.setCommand("sleep 999");
         images.add(img);
-
         setVariableValueToObject(mojo, "images", images);
 
         mojo.execute();
 
         assertThat(getContainerIdByName("boohoo"), is(nullValue()));
-
     }
 }
