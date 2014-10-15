@@ -79,6 +79,15 @@ public class DockerWhisperer {
                 }
             }
 
+            List<Entry<String, Integer>> dynamicPortMapping = mappedPorts.getDynamicPortsMap(x.getName());
+            if (dynamicPortMapping != null) {
+                for (Entry<String, Integer> entry : dynamicPortMapping) {
+                    ExposedPort exposedPort = ExposedPort.tcp(entry.getValue());
+                    exposedPorts.add(exposedPort);
+                    portBindings.bind(exposedPort, Ports.Binding(0));
+                }
+            }
+
             CreateContainerCmd createContainerCmd = dockerClient.createContainerCmd(image).withName(name);
             if (x.getCommand() != null) {
                 createContainerCmd.withCmd(x.getCommand().split(" "));
@@ -91,6 +100,12 @@ public class DockerWhisperer {
             dockerClient.startContainerCmd(container.getId())
                         .withPortBindings(portBindings)
                         .exec();
+
+            if (dynamicPortMapping != null) {
+                for (Entry<String, Integer> entry : mappedPorts.getDynamicPortsForVariables(x.getName(), container.getId())) {
+                    mavenProject.getProperties().setProperty(entry.getKey(), entry.getValue().toString());
+                }
+            }
         }
     }
 

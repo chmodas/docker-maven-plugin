@@ -7,6 +7,7 @@ import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.Ports;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -157,5 +158,30 @@ public class StartDockerMojoTest extends BaseTest {
         InspectContainerResponse response = dockerClient.inspectContainerCmd(containerId).exec();
         assertThat(response.getHostConfig().getPortBindings().getBindings().get(ExposedPort.tcp(80)), is(equalTo(Ports.Binding(80))));
         assertThat(response.getHostConfig().getPortBindings().getBindings().get(ExposedPort.tcp(443)), is(equalTo(Ports.Binding(443))));
+    }
+
+    public void testCanBindDynamicallyAssignedPorts() throws Exception {
+        List<Image> images = new ArrayList<>();
+        Image image = genImageObj("boohoo");
+        image.setPorts(new ArrayList<String>() {{
+            add("http_port:80");
+            add("https_port:443");
+        }});
+        images.add(image);
+        setVariableValueToObject(mojo, "images", images);
+
+        MavenProject project = (MavenProject) getVariableValueFromObject(mojo, "project");
+        assertThat(project.getProperties().getProperty("http_port"), is(nullValue()));
+        assertThat(project.getProperties().getProperty("https_port"), is(nullValue()));
+
+        mojo.execute();
+
+        assertThat(project.getProperties().getProperty("http_port"), is(notNullValue()));
+        assertTrue(project.getProperties().getProperty("http_port").contains("49"));
+        assertTrue(project.getProperties().getProperty("http_port").length() == 5);
+
+        assertThat(project.getProperties().getProperty("https_port"), is(notNullValue()));
+        assertTrue(project.getProperties().getProperty("https_port").contains("49"));
+        assertTrue(project.getProperties().getProperty("https_port").length() == 5);
     }
 }

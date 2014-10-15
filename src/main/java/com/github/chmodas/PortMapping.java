@@ -2,6 +2,9 @@ package com.github.chmodas;
 
 import com.github.chmodas.mojo.objects.Image;
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.InspectContainerResponse;
+import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.Ports;
 import org.apache.maven.plugin.MojoExecutionException;
 
 import java.util.AbstractMap.SimpleEntry;
@@ -97,5 +100,18 @@ public class PortMapping {
 
     public List<Entry<String, Integer>> getDynamicPortsMap(String containerName) {
         return dynamicMap.get(containerName);
+    }
+
+    public List<Entry<String, Integer>> getDynamicPortsForVariables(String containerName, String containerId) {
+        List<Entry<String, Integer>> portsMap = new ArrayList<>();
+
+        InspectContainerResponse response = dockerClient.inspectContainerCmd(containerId).exec();
+
+        for (Entry<String, Integer> entry : dynamicMap.get(containerName)) {
+            Ports.Binding portsBinding = response.getNetworkSettings().getPorts().getBindings().get(ExposedPort.tcp(entry.getValue()));
+            portsMap.add(new SimpleEntry<>(entry.getKey(), portsBinding.getHostPort()));
+        }
+
+        return portsMap;
     }
 }
