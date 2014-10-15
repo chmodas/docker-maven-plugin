@@ -20,6 +20,19 @@
         <maven.version>3.2.3</maven.version>
     </properties>
 
+    <distributionManagement>
+        <repository>
+            <id>deployment</id>
+            <name>Internal Releases</name>
+            <url>http://maven.dev.peer1.com:8081/nexus/content/repositories/releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>deployment</id>
+            <name>Internal Snapshots</name>
+            <url>http://maven.dev.peer1.com:8081/nexus/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
     <dependencies>
         <!-- Maven -->
         <dependency>
