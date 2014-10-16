@@ -36,7 +36,7 @@ public class StopDockerMojoTest extends BaseTest {
         List<Image> images = new ArrayList<>();
         final Image img = new Image();
         img.setName("boohoo");
-        img.setRegistry("busybox");
+        img.setRepository("busybox");
         img.setTag("latest");
         img.setCommand("sleep 999");
         images.add(img);

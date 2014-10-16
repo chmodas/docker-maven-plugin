@@ -27,7 +27,7 @@ public class StartDockerMojoTest extends BaseTest {
     private Image genImageObj(String name) {
         Image image = new Image();
         image.setName(name);
-        image.setRegistry("busybox");
+        image.setRepository("busybox");
         image.setTag("latest");
         image.setCommand("sleep 999");
         return image;

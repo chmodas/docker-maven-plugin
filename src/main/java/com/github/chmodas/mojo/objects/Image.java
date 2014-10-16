@@ -4,7 +4,7 @@ import java.util.List;
 
 public class Image {
     private String name;
-    private String registry;
+    private String repository;
     private String tag;
     private String command;
     private List<String> ports;
@@ -20,15 +20,19 @@ public class Image {
         this.name = name;
     }
 
-    public String getRegistry() {
-        return registry;
+    public String getRepository() {
+        return repository;
     }
 
-    public void setRegistry(String registry) {
-        this.registry = registry;
+    public void setRepository(String repository) {
+        this.repository = repository;
     }
 
     public String getTag() {
+        if (tag == null) {
+            return "latest";
+        }
+
         return tag;
     }
 

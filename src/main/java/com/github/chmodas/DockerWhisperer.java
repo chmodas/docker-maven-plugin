@@ -38,7 +38,7 @@ public class DockerWhisperer {
     }
 
     void sanitizeImageRegistry(Image image) throws MojoExecutionException {
-        if (image.getRegistry() == null) {
+        if (image.getRepository() == null) {
             throw new MojoExecutionException("image.registry must not be null.");
         }
     }
@@ -65,7 +65,7 @@ public class DockerWhisperer {
          */
         for (Image x : images) {
             String name = prefix + "-" + x.getName();
-            String image = x.getRegistry() + ":" + x.getTag();
+            String image = x.getRepository() + ":" + x.getTag();
 
             Ports portBindings = new Ports();
             List<ExposedPort> exposedPorts = new ArrayList<>();
@@ -111,7 +111,7 @@ public class DockerWhisperer {
 
     void pullImages(List<Image> images) {
         for (Image x : images) {
-            dockerClient.pullImageCmd(x.getRegistry()).withTag(x.getTag()).exec();
+            dockerClient.pullImageCmd(x.getRepository()).withTag(x.getTag()).exec();
         }
     }
 
