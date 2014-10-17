@@ -1,6 +1,7 @@
-package com.github.chmodas;
+package com.github.chmodas.mojo.util;
 
 import com.github.chmodas.mojo.objects.Image;
+import com.github.chmodas.mojo.util.PortMapping;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.InternalServerErrorException;
 import com.github.dockerjava.api.NotModifiedException;

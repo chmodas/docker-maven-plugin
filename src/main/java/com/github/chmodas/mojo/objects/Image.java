@@ -8,6 +8,7 @@ public class Image {
     private String tag;
     private String command;
     private List<String> ports;
+    private List<String> volumes;
 
     public Image() {
     }
@@ -54,5 +55,13 @@ public class Image {
 
     public void setPorts(List<String> ports) {
         this.ports = ports;
+    }
+
+    public List<String> getVolumes() {
+        return volumes;
+    }
+
+    public void setVolumes(List<String> volumes) {
+        this.volumes = volumes;
     }
 }

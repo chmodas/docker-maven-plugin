@@ -1,6 +1,6 @@
 package com.github.chmodas.mojo;
 
-import com.github.chmodas.DockerWhisperer;
+import com.github.chmodas.mojo.util.DockerWhisperer;
 import com.github.dockerjava.api.DockerClient;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
