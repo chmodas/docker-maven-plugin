@@ -20,17 +20,19 @@ public class DataVolumes {
     private final Map<String, Volume> binds = new LinkedHashMap<>();
 
     public DataVolumes(String containerName, List<String> volumes) {
-        for (String x : volumes) {
-            String[] vs = x.split(":", 2);
+        if (volumes != null) {
+            for (String x : volumes) {
+                String[] vs = x.split(":", 2);
 
-            Volume volume;
-            if (vs.length == 1) {
-                volume = new Volume(vs[0]);
-            } else {
-                volume = new Volume(vs[1]);
-                binds.put(vs[0], volume);
+                Volume volume;
+                if (vs.length == 1) {
+                    volume = new Volume(vs[0]);
+                } else {
+                    volume = new Volume(vs[1]);
+                    binds.put(vs[0], volume);
+                }
+                this.volumes.add(volume);
             }
-            this.volumes.add(volume);
         }
     }
 

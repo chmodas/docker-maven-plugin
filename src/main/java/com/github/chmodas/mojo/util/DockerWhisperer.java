@@ -1,12 +1,12 @@
 package com.github.chmodas.mojo.util;
 
 import com.github.chmodas.mojo.objects.Image;
-import com.github.chmodas.mojo.util.PortMapping;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.InternalServerErrorException;
 import com.github.dockerjava.api.NotModifiedException;
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.command.StartContainerCmd;
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.Ports;
@@ -89,6 +89,8 @@ public class DockerWhisperer {
                 }
             }
 
+            DataVolumes dataVolumes = new DataVolumes(name, x.getVolumes());
+
             CreateContainerCmd createContainerCmd = dockerClient.createContainerCmd(image).withName(name);
             if (x.getCommand() != null) {
                 createContainerCmd.withCmd(x.getCommand().split(" "));
@@ -96,11 +98,19 @@ public class DockerWhisperer {
             if (exposedPorts.size() > 0) {
                 createContainerCmd.withExposedPorts(exposedPorts.toArray(new ExposedPort[exposedPorts.size()]));
             }
+            if (dataVolumes.hasVolumes()) {
+                createContainerCmd.withVolumes(dataVolumes.getVolumes());
+            }
             CreateContainerResponse container = createContainerCmd.exec();
 
-            dockerClient.startContainerCmd(container.getId())
-                        .withPortBindings(portBindings)
-                        .exec();
+            StartContainerCmd startContainerCmd = dockerClient.startContainerCmd(container.getId())
+                                                              .withPortBindings(portBindings);
+
+            if (dataVolumes.hasBinds()) {
+                startContainerCmd.withBinds(dataVolumes.getBinds());
+            }
+
+            startContainerCmd.exec();
 
             if (dynamicPortMapping != null) {
                 for (Entry<String, Integer> entry : mappedPorts.getDynamicPortsForVariables(x.getName(), container.getId())) {
@@ -136,6 +146,7 @@ public class DockerWhisperer {
                     dockerClient.removeContainerCmd(containerIds.get(x.getName())).withForce(true).exec();
                 } catch (InternalServerErrorException e) {
                     if (e.getMessage().contains("Driver devicemapper failed to remove root filesystem")) {
+                        //noinspection StatementWithEmptyBody
                         if (getStartedContainerIds().get(x.getName()) == null) {
                             // This issue is really annoying
                         }

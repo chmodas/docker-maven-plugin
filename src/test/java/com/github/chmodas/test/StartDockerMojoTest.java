@@ -6,6 +6,7 @@ import com.github.chmodas.mojo.objects.Image;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.Ports;
+import com.github.dockerjava.api.model.VolumeBind;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
@@ -183,5 +184,39 @@ public class StartDockerMojoTest extends BaseTest {
         assertThat(project.getProperties().getProperty("https_port"), is(notNullValue()));
         assertTrue(project.getProperties().getProperty("https_port").contains("49"));
         assertTrue(project.getProperties().getProperty("https_port").length() == 5);
+    }
+
+    public void testCanStartContainersWithVolumes() throws Exception {
+        List<Image> images = new ArrayList<>();
+        Image image = genImageObj("boohoo");
+        image.setVolumes(new ArrayList<String>() {{
+            add("/volume1");
+            add("/host:/volume2");
+        }});
+        images.add(image);
+
+        setVariableValueToObject(mojo, "images", images);
+        mojo.execute();
+
+        String containerId = getContainerIdByName("boohoo");
+        assertThat(containerId, is(not(nullValue())));
+
+        InspectContainerResponse inspectContainerResponse = dockerClient.inspectContainerCmd(containerId).exec();
+
+        VolumeBind[] volumeBinds = inspectContainerResponse.getVolumes();
+        assertThat(volumeBinds.length, is(equalTo(2)));
+        List<String> hostPaths = new ArrayList<>();
+        List<String> containerPaths = new ArrayList<>();
+        for(VolumeBind bind :volumeBinds) {
+            // If no host directory was given replace with /null
+            String hostPath = bind.getHostPath();
+            if (hostPath.contains("docker")) {
+                hostPath = "/null";
+            }
+            hostPaths.add(hostPath);
+            containerPaths.add(bind.getContainerPath());
+        }
+        assertThat(hostPaths, contains("/null", "/host"));
+        assertThat(containerPaths, contains("/volume1", "/volume2"));
     }
 }
