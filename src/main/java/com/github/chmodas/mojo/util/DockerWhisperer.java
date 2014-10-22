@@ -8,8 +8,6 @@ import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.StartContainerCmd;
 import com.github.dockerjava.api.model.Container;
-import com.github.dockerjava.api.model.ExposedPort;
-import com.github.dockerjava.api.model.Ports;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
@@ -17,7 +15,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 /**
  * The whisperer does the talkin'.
@@ -38,21 +35,25 @@ public class DockerWhisperer {
         this.prefix = prefix;
     }
 
-    void sanitizeImageRegistry(Image image) throws MojoExecutionException {
-        if (image.getRepository() == null) {
-            throw new MojoExecutionException("image.registry must not be null.");
-        }
-    }
-
     public void startContainers(List<Image> images, Boolean pullImages) throws MojoExecutionException {
+        List<Whisper> whispers = new ArrayList<>();
+
+        /**
+         * Start with clean lists.
+         */
+        PortMapping.Used.reset();
+
         /**
          * Perform some sanitation.
          */
         for (Image image : images) {
-            sanitizeImageRegistry(image);
-        }
+            Whisper whisper = new Whisper();
 
-        PortMapping mappedPorts = new PortMapping(dockerClient, images);
+            whisper.setName(prefix, image.getName());
+            whisper.setRepository(image.getRepository());
+
+            whispers.add(whisper);
+        }
 
         /**
          * Pull the images if necessary.
@@ -68,26 +69,7 @@ public class DockerWhisperer {
             String name = prefix + "-" + x.getName();
             String image = x.getRepository() + ":" + x.getTag();
 
-            Ports portBindings = new Ports();
-            List<ExposedPort> exposedPorts = new ArrayList<>();
-
-            List<Entry<Integer, Integer>> staticPortMapping = mappedPorts.getStaticPortsMap(x.getName());
-            if (staticPortMapping != null) {
-                for (Entry<Integer, Integer> entry : staticPortMapping) {
-                    ExposedPort exposedPort = ExposedPort.tcp(entry.getValue());
-                    exposedPorts.add(exposedPort);
-                    portBindings.bind(exposedPort, Ports.Binding(entry.getKey()));
-                }
-            }
-
-            List<Entry<String, Integer>> dynamicPortMapping = mappedPorts.getDynamicPortsMap(x.getName());
-            if (dynamicPortMapping != null) {
-                for (Entry<String, Integer> entry : dynamicPortMapping) {
-                    ExposedPort exposedPort = ExposedPort.tcp(entry.getValue());
-                    exposedPorts.add(exposedPort);
-                    portBindings.bind(exposedPort, Ports.Binding(0));
-                }
-            }
+            PortMapping portMapping = new PortMapping(x.getPorts());
 
             DataVolumes dataVolumes = new DataVolumes(name, x.getVolumes());
 
@@ -95,16 +77,16 @@ public class DockerWhisperer {
             if (x.getCommand() != null) {
                 createContainerCmd.withCmd(x.getCommand().split(" "));
             }
-            if (exposedPorts.size() > 0) {
-                createContainerCmd.withExposedPorts(exposedPorts.toArray(new ExposedPort[exposedPorts.size()]));
-            }
+
+            createContainerCmd.withExposedPorts(portMapping.getExposedPorts());
+
             if (dataVolumes.hasVolumes()) {
                 createContainerCmd.withVolumes(dataVolumes.getVolumes());
             }
             CreateContainerResponse container = createContainerCmd.exec();
 
             StartContainerCmd startContainerCmd = dockerClient.startContainerCmd(container.getId())
-                                                              .withPortBindings(portBindings);
+                                                              .withPortBindings(portMapping.getPortsBinding());
 
             if (dataVolumes.hasBinds()) {
                 startContainerCmd.withBinds(dataVolumes.getBinds());
@@ -112,10 +94,8 @@ public class DockerWhisperer {
 
             startContainerCmd.exec();
 
-            if (dynamicPortMapping != null) {
-                for (Entry<String, Integer> entry : mappedPorts.getDynamicPortsForVariables(x.getName(), container.getId())) {
-                    mavenProject.getProperties().setProperty(entry.getKey(), entry.getValue().toString());
-                }
+            for (Map.Entry<String, String> entry : portMapping.getDynamicPortsBinding(dockerClient, container.getId()).entrySet()) {
+                mavenProject.getProperties().setProperty(entry.getKey(), entry.getValue());
             }
         }
     }

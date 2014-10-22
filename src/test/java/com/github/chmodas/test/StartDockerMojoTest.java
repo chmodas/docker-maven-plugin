@@ -47,7 +47,7 @@ public class StartDockerMojoTest extends BaseTest {
             mojo.execute();
             fail("MojoExecutionException is not thrown.");
         } catch (MojoExecutionException e) {
-            assertThat(e.getMessage(), is(equalTo("image.registry must not be null.")));
+            assertThat(e.getMessage(), is(equalTo("image.repository must not be null")));
         }
     }
 
@@ -207,7 +207,7 @@ public class StartDockerMojoTest extends BaseTest {
         assertThat(volumeBinds.length, is(equalTo(2)));
         List<String> hostPaths = new ArrayList<>();
         List<String> containerPaths = new ArrayList<>();
-        for(VolumeBind bind :volumeBinds) {
+        for (VolumeBind bind : volumeBinds) {
             // If no host directory was given replace with /null
             String hostPath = bind.getHostPath();
             if (hostPath.contains("docker")) {

@@ -1,117 +1,141 @@
 package com.github.chmodas.mojo.util;
 
-import com.github.chmodas.mojo.objects.Image;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.Ports;
 import org.apache.maven.plugin.MojoExecutionException;
 
-import java.util.AbstractMap.SimpleEntry;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.*;
 
+/**
+ * Utility for mapping ports.
+ */
 public class PortMapping {
-    private final DockerClient dockerClient;
-    private final Map<String, List<Entry<Integer, Integer>>> staticMap = new HashMap<>();
-    private final Map<String, List<Entry<String, Integer>>> dynamicMap = new HashMap<>();
-    private final List<Integer> usedHostPorts = new ArrayList<>();
-    private final List<String> usedVariableNames = new ArrayList<>();
+    private final Map<String, ExposedPort> exposedPortMap = new LinkedHashMap<>();
+    private final Ports portsBinding = new Ports();
 
-    public PortMapping(DockerClient dockerClient, List<Image> images) throws MojoExecutionException {
-        this.dockerClient = dockerClient;
+    public PortMapping(List<String> ports) throws MojoExecutionException {
+        if (ports != null) {
+            for (String port : ports) {
 
-        for (Image image : images) {
-            if (image.getPorts() != null && image.getPorts().size() > 0) {
-                for (String port : image.getPorts()) {
-                    String[] ps = port.split(":", 2);
-                    if (ps.length != 2) {
-                        throw new MojoExecutionException(
-                                "Invalid port mapping '" + port + "'. " +
-                                "Port mapping must be given in the format <hostPort>:<exposedPort> (e.g. 80:80).");
-                    }
+                String[] ps = port.split(":", 2);
+                if (ps.length != 2) {
+                    throw new MojoExecutionException(
+                            "Invalid port mapping '" + port + "'. " +
+                            "Port mapping must be given in the format <hostPort>:<exposedPort> (e.g. 80:80).");
+                }
+
+                try {
+                    Integer exposedPort = Integer.parseInt(ps[1]);
+                    Integer hostPort;
 
                     try {
-                        Integer exposedPort = Integer.parseInt(ps[1]);
-                        Integer hostPort;
-
-                        try {
-                            hostPort = Integer.parseInt(ps[0]);
-                            addStaticMapEntry(image.getName(), hostPort, exposedPort);
-                        } catch (NumberFormatException e) {
-                            addDynamicMapEntry(image.getName(), ps[0], exposedPort);
-                        }
-
+                        hostPort = Integer.parseInt(ps[0]);
+                        addStaticMapping(hostPort, exposedPort);
                     } catch (NumberFormatException e) {
-                        throw new MojoExecutionException(
-                                "Invalid port mapping '" + port + "'. " +
-                                "Port mapping must be given in the format <hostPort>:<exposedPort> (e.g. 80:80).");
+                        addDynamicMapping(ps[0], exposedPort);
                     }
+
+                } catch (NumberFormatException e) {
+                    throw new MojoExecutionException(
+                            "Invalid port mapping '" + port + "'. " +
+                            "Port mapping must be given in the format <hostPort>:<exposedPort> (e.g. 80:80).");
                 }
             }
-
         }
     }
 
-    private void addStaticMapEntry(String containerName, Integer hostPort, Integer exposedPort) throws MojoExecutionException {
-        if (usedHostPorts.contains(hostPort)) {
+    private void addStaticMapping(Integer hostPort, Integer containerPort) throws MojoExecutionException {
+        if (Used.hasPort(hostPort)) {
             throw new MojoExecutionException(
                     "The port '" + hostPort + "' is specified for use in multiple containers. " +
                     "One cannot run multiple containers that use the same port on the same host.");
         } else {
-            usedHostPorts.add(hostPort);
+            Used.addPort(hostPort);
         }
 
-        Entry<Integer, Integer> entry = new SimpleEntry<>(hostPort, exposedPort);
-        if (staticMap.containsKey(containerName)) {
-            staticMap.get(containerName).add(entry);
-        } else {
-            List<Entry<Integer, Integer>> entries = new ArrayList<>();
-            entries.add(entry);
-            staticMap.put(containerName, entries);
-        }
+        ExposedPort exposedPort = ExposedPort.tcp(containerPort);
+        exposedPortMap.put(hostPort.toString(), exposedPort);
+        portsBinding.bind(exposedPort, Ports.Binding(hostPort));
     }
 
-    private void addDynamicMapEntry(String containerName, String variableName, Integer exposedPort) throws MojoExecutionException {
-        if (usedVariableNames.contains(variableName)) {
+    private void addDynamicMapping(String variableName, Integer containerPort) throws MojoExecutionException {
+        if (Used.hasVariableName(variableName)) {
             throw new MojoExecutionException(
                     "The variable '" + variableName + "' is specified for us in multiple containers. " +
                     "One cannot use the same variable for multiple ports.");
         } else {
+            Used.addVariableName(variableName);
+        }
+
+        ExposedPort exposedPort = ExposedPort.tcp(containerPort);
+        exposedPortMap.put(variableName, exposedPort);
+        /**
+         * Setting the Ports.Binding to 0 forces a dynamic port allocation on the host.
+         */
+        portsBinding.bind(exposedPort, Ports.Binding(0));
+    }
+
+    public ExposedPort[] getExposedPorts() {
+        if (exposedPortMap.size() > 0) {
+            ExposedPort[] exposedPorts = new ExposedPort[exposedPortMap.size()];
+            Integer i = 0;
+            for (Map.Entry<String, ExposedPort> entry : exposedPortMap.entrySet()) {
+                exposedPorts[i] = entry.getValue();
+                i++;
+            }
+            return exposedPorts;
+
+        }
+
+        return new ExposedPort[0];
+    }
+
+    public Ports getPortsBinding() {
+        return portsBinding;
+    }
+
+    public Map<String, String> getDynamicPortsBinding(DockerClient dockerClient, String containerId) {
+        Map<String, String> dynamicPortsBinding = new HashMap<>();
+
+        InspectContainerResponse response = dockerClient.inspectContainerCmd(containerId).exec();
+        for (Map.Entry<String, ExposedPort> entry : exposedPortMap.entrySet()) {
+            try {
+                //noinspection ResultOfMethodCallIgnored
+                Integer.parseInt(entry.getKey());
+            } catch (NumberFormatException e) {
+                Ports.Binding portsBinding = response.getNetworkSettings().getPorts().getBindings().get(entry.getValue());
+                Integer hostPort = portsBinding.getHostPort();
+                dynamicPortsBinding.put(entry.getKey(), hostPort.toString());
+            }
+        }
+        return dynamicPortsBinding;
+    }
+
+    public static class Used {
+        private static List<Integer> usedPorts;
+        private static List<String> usedVariableNames;
+
+        public static void reset() {
+            usedPorts = new ArrayList<>();
+            usedVariableNames = new ArrayList<>();
+        }
+
+        public static void addPort(Integer port) {
+            usedPorts.add(port);
+        }
+
+        public static Boolean hasPort(Integer port) {
+            return usedPorts.contains(port);
+        }
+
+        public static void addVariableName(String variableName) {
             usedVariableNames.add(variableName);
         }
 
-        Map.Entry<String, Integer> entry = new SimpleEntry<>(variableName, exposedPort);
-        if (dynamicMap.containsKey(containerName)) {
-            dynamicMap.get(containerName).add(entry);
-        } else {
-            List<Entry<String, Integer>> entries = new ArrayList<>();
-            entries.add(entry);
-            dynamicMap.put(containerName, entries);
+        public static Boolean hasVariableName(String variableName) {
+            return usedVariableNames.contains(variableName);
         }
-    }
-
-    public List<Entry<Integer, Integer>> getStaticPortsMap(String containerName) {
-        return staticMap.get(containerName);
-    }
-
-    public List<Entry<String, Integer>> getDynamicPortsMap(String containerName) {
-        return dynamicMap.get(containerName);
-    }
-
-    public List<Entry<String, Integer>> getDynamicPortsForVariables(String containerName, String containerId) {
-        List<Entry<String, Integer>> portsMap = new ArrayList<>();
-
-        InspectContainerResponse response = dockerClient.inspectContainerCmd(containerId).exec();
-
-        for (Entry<String, Integer> entry : dynamicMap.get(containerName)) {
-            Ports.Binding portsBinding = response.getNetworkSettings().getPorts().getBindings().get(ExposedPort.tcp(entry.getValue()));
-            portsMap.add(new SimpleEntry<>(entry.getKey(), portsBinding.getHostPort()));
-        }
-
-        return portsMap;
     }
 }
