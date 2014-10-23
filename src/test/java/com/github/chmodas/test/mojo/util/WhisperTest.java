@@ -35,18 +35,21 @@ public class WhisperTest {
     }
 
     @Test
-    public void canSetRepository() throws Exception {
+    public void catSetImage() throws Exception {
         try {
-            new Whisper().setRepository(null);
+            new Whisper().setImage(null, null);
             fail("MojoExecutionException not thrown.");
         } catch (MojoExecutionException e) {
             assertThat(e.getMessage(), is(equalTo("image.repository must not be null")));
         }
 
         Whisper whisper = new Whisper();
+        whisper.setImage("docker.example.com/repo", null);
+        assertThat(whisper.getImage(), is(equalTo("docker.example.com/repo:latest")));
 
-        whisper.setRepository("docker.example.com/repo:latest");
-        assertThat(whisper.getRepository(), is(equalTo("docker.example.com/repo:latest")));
+        whisper = new Whisper();
+        whisper.setImage("docker.example.com/repo", "1.2.3");
+        assertThat(whisper.getImage(), is(equalTo("docker.example.com/repo:1.2.3")));
     }
 
     @Test

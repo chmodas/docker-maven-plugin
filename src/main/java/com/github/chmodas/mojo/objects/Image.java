@@ -30,10 +30,6 @@ public class Image {
     }
 
     public String getTag() {
-        if (tag == null) {
-            return "latest";
-        }
-
         return tag;
     }
 

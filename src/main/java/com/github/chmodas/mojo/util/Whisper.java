@@ -9,7 +9,7 @@ import java.util.List;
  */
 public class Whisper {
     private String name;
-    private String repository;
+    private String image;
     private DataVolumes dataVolumes;
     private PortMapping portMapping;
 
@@ -28,17 +28,22 @@ public class Whisper {
         this.name = prefix + "-" + name.trim().toLowerCase();
     }
 
-    public String getRepository() {
-        return repository;
+    public String getImage() {
+        return image;
     }
 
-    public void setRepository(String repository) throws MojoExecutionException {
+    public void setImage(String repository, String tag) throws MojoExecutionException {
+        // TODO: better validation
+
         if (repository == null) {
             throw new MojoExecutionException("image.repository must not be null");
         }
-        // TODO: have a better check here.
 
-        this.repository = repository;
+        if (tag == null) {
+            tag = "latest";
+        }
+
+        this.image = repository + ":" + tag;
     }
 
     public DataVolumes getDataVolumes() {
@@ -47,7 +52,7 @@ public class Whisper {
 
     public void setDataVolumes(List<String> volumes) {
         if (volumes != null) {
-            this.dataVolumes = new DataVolumes(null, volumes);
+            this.dataVolumes = new DataVolumes(volumes);
         }
     }
 
