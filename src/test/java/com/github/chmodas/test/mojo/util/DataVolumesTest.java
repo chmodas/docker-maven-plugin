@@ -16,29 +16,29 @@ public class DataVolumesTest {
     @Test
     public void canCheckIfThereAreNewVolumesThatHaveTobeCreatedInsideTheContainer() throws Exception {
         List<String> volumesFromMojo = new ArrayList<>();
-        DataVolumes dataVolumes = new DataVolumes("boohoo", volumesFromMojo);
+        DataVolumes dataVolumes = new DataVolumes(volumesFromMojo);
         assertThat(dataVolumes.hasVolumes(), is(equalTo(false)));
 
         volumesFromMojo.add("/volume");
-        dataVolumes = new DataVolumes("boohoo", volumesFromMojo);
+        dataVolumes = new DataVolumes(volumesFromMojo);
         assertThat(dataVolumes.hasVolumes(), is(equalTo(true)));
     }
 
     @Test
     public void canAddEntriesForNewVolumesToBeCreatedInsideTheContainer() throws Exception {
         List<String> volumesFromMojo = new ArrayList<>();
-        DataVolumes dataVolumes = new DataVolumes("boohoo", volumesFromMojo);
+        DataVolumes dataVolumes = new DataVolumes(volumesFromMojo);
         assertThat(dataVolumes.hasVolumes(), is(equalTo(false)));
-        assertThat(dataVolumes.getBinds(), is(equalTo(null)));
+        assertThat(dataVolumes.getVolumes(), is(equalTo(new Volume[0])));
 
         volumesFromMojo.add("/volume");
-        dataVolumes = new DataVolumes("boohoo", volumesFromMojo);
+        dataVolumes = new DataVolumes(volumesFromMojo);
         assertThat(dataVolumes.hasVolumes(), is(equalTo(true)));
         assertThat(dataVolumes.getVolumes().length, is(equalTo(1)));
         assertThat(dataVolumes.getVolumes()[0], is(equalTo(new Volume("/volume"))));
 
         volumesFromMojo.add("/volume2");
-        dataVolumes = new DataVolumes("boohoo", volumesFromMojo);
+        dataVolumes = new DataVolumes(volumesFromMojo);
         assertThat(dataVolumes.hasVolumes(), is(equalTo(true)));
         assertThat(dataVolumes.getVolumes().length, is(equalTo(2)));
         assertThat(dataVolumes.getVolumes()[0], is(equalTo(new Volume("/volume"))));
@@ -48,30 +48,30 @@ public class DataVolumesTest {
     @Test
     public void canCheckIfThereIsHostFileOrDirectoryThatHasToBeMountedInsideTheContainer() throws Exception {
         List<String> volumes = new ArrayList<>();
-        DataVolumes dataVolumes = new DataVolumes("boohoo", volumes);
+        DataVolumes dataVolumes = new DataVolumes(volumes);
         assertThat(dataVolumes.hasBinds(), is(equalTo(false)));
 
         volumes.add("/host:/volume");
-        dataVolumes = new DataVolumes("boohoo", volumes);
+        dataVolumes = new DataVolumes(volumes);
         assertThat(dataVolumes.hasBinds(), is(equalTo(true)));
     }
 
     @Test
     public void canAddEntriesForMoutingHostFileOrDirectoryInsideTheContainer() throws Exception {
         List<String> volumes = new ArrayList<>();
-        DataVolumes dataVolumes = new DataVolumes("boohoo", volumes);
+        DataVolumes dataVolumes = new DataVolumes(volumes);
         assertThat(dataVolumes.hasBinds(), is(equalTo(false)));
-        assertThat(dataVolumes.getBinds(), is(equalTo(null)));
+        assertThat(dataVolumes.getBinds(), is(equalTo(new Bind[0])));
 
         volumes.add("/host:/volume");
-        dataVolumes = new DataVolumes("boohoo", volumes);
+        dataVolumes = new DataVolumes(volumes);
         assertThat(dataVolumes.hasBinds(), is(equalTo(true)));
         assertThat(dataVolumes.getBinds(), is(not(equalTo(null))));
         assertThat(dataVolumes.getBinds().length, is(equalTo(1)));
         assertThat(dataVolumes.getBinds()[0], is(equalTo(new Bind("/host", new Volume("/volume")))));
 
         volumes.add("/host2:/volume2");
-        dataVolumes = new DataVolumes("boohoo", volumes);
+        dataVolumes = new DataVolumes(volumes);
         assertThat(dataVolumes.hasBinds(), is(equalTo(true)));
         assertThat(dataVolumes.getBinds(), is(not(equalTo(null))));
         assertThat(dataVolumes.getBinds().length, is(equalTo(2)));

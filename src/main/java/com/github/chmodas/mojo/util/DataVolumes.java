@@ -8,6 +8,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Utility for volumes management.
+ */
 public class DataVolumes {
     /**
      * List of volumes to create inside a container.
@@ -19,7 +22,7 @@ public class DataVolumes {
      */
     private final Map<String, Volume> binds = new LinkedHashMap<>();
 
-    public DataVolumes(String containerName, List<String> volumes) {
+    public DataVolumes(List<String> volumes) {
         if (volumes != null) {
             for (String x : volumes) {
                 String[] vs = x.split(":", 2);
@@ -44,7 +47,7 @@ public class DataVolumes {
         if (hasVolumes()) {
             return volumes.toArray(new Volume[volumes.size()]);
         }
-        return null;
+        return new Volume[0];
     }
 
     public Boolean hasBinds() {
@@ -61,6 +64,6 @@ public class DataVolumes {
             }
             return bindArray;
         }
-        return null;
+        return new Bind[0];
     }
 }
