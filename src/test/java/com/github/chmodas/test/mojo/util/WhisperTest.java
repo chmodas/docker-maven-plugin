@@ -1,17 +1,15 @@
 package com.github.chmodas.test.mojo.util;
 
+import com.github.chmodas.mojo.util.DataVolumes;
+import com.github.chmodas.mojo.util.PortMapping;
 import com.github.chmodas.mojo.util.Whisper;
-import com.github.dockerjava.api.model.Bind;
-import com.github.dockerjava.api.model.Volume;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.fail;
 
 public class WhisperTest {
@@ -44,60 +42,41 @@ public class WhisperTest {
         }
 
         Whisper whisper = new Whisper();
+        assertThat(whisper.getImage(), is(equalTo(null)));
+        assertThat(whisper.getRepository(), is(equalTo(null)));
+        assertThat(whisper.getTag(), is(equalTo(null)));
+
+
+        whisper = new Whisper();
         whisper.setImage("docker.example.com/repo", null);
         assertThat(whisper.getImage(), is(equalTo("docker.example.com/repo:latest")));
+        assertThat(whisper.getRepository(), is(equalTo("docker.example.com/repo")));
+        assertThat(whisper.getTag(), is(equalTo("latest")));
 
         whisper = new Whisper();
         whisper.setImage("docker.example.com/repo", "1.2.3");
         assertThat(whisper.getImage(), is(equalTo("docker.example.com/repo:1.2.3")));
+        assertThat(whisper.getRepository(), is(equalTo("docker.example.com/repo")));
+        assertThat(whisper.getTag(), is(equalTo("1.2.3")));
     }
 
     @Test
     public void canSetDataVolumes() throws Exception {
         Whisper whisper = new Whisper();
+        assertThat(whisper.getDataVolumes(), is(equalTo(null)));
 
-        List<String> volumes = new ArrayList<String>() {{
-            add("/volume");
-            add("/host:/container");
-        }};
-        whisper.setDataVolumes(volumes);
-        assertThat(whisper.getDataVolumes().getVolumes(), is(equalTo(new Volume[]{new Volume("/volume"), new Volume("/container")})));
-        assertThat(whisper.getDataVolumes().getBinds(), is(equalTo(new Bind[]{new Bind("/host", new Volume("/container"))})));
+        whisper.setDataVolumes(new ArrayList<String>() {{
+        }});
+        assertThat(whisper.getDataVolumes(), is(instanceOf(DataVolumes.class)));
     }
 
     @Test
-    public void setPortMapping() throws Exception {
-        try {
-            List<String> ports = new ArrayList<String>() {{
-                add("80");
-            }};
-            new Whisper().setPortMapping(ports);
-            fail("MojoExecutionException not thrown.");
-        } catch (MojoExecutionException e) {
-            assertThat(e.getMessage(), is(equalTo(
-                    "Invalid port mapping '80'. Port mapping must be given in the format <hostPort>:<exposedPort> (e.g. 80:80).")));
-        }
+    public void canSetPortMapping() throws Exception {
+        Whisper whisper = new Whisper();
+        assertThat(whisper.getPortMapping(), is(equalTo(null)));
 
-        try {
-            List<String> ports = new ArrayList<String>() {{
-                add("80:abc");
-            }};
-            new Whisper().setPortMapping(ports);
-            fail("MojoExecutionException not thrown.");
-        } catch (MojoExecutionException e) {
-            assertThat(e.getMessage(), is(equalTo(
-                    "Invalid port mapping '80:abc'. Port mapping must be given in the format <hostPort>:<exposedPort> (e.g. 80:80).")));
-        }
-
-        try {
-            List<String> ports = new ArrayList<String>() {{
-                add("80:");
-            }};
-            new Whisper().setPortMapping(ports);
-            fail("MojoExecutionException not thrown.");
-        } catch (MojoExecutionException e) {
-            assertThat(e.getMessage(), is(equalTo(
-                    "Invalid port mapping '80:'. Port mapping must be given in the format <hostPort>:<exposedPort> (e.g. 80:80).")));
-        }
+        whisper.setPortMapping(new ArrayList<String>() {{
+        }});
+        assertThat(whisper.getPortMapping(), is(instanceOf(PortMapping.class)));
     }
 }

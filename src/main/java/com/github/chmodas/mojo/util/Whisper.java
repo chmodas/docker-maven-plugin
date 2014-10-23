@@ -10,6 +10,9 @@ import java.util.List;
 public class Whisper {
     private String name;
     private String image;
+    private String repository;
+    private String tag;
+    private String[] command;
     private DataVolumes dataVolumes;
     private PortMapping portMapping;
 
@@ -44,6 +47,28 @@ public class Whisper {
         }
 
         this.image = repository + ":" + tag;
+        this.repository = repository;
+        this.tag = tag;
+    }
+
+    public String getRepository() {
+        return repository;
+    }
+
+    public String getTag() {
+        return tag;
+    }
+
+    public String[] getCommand() {
+        return command;
+    }
+
+    public void setCommand(String command) {
+        if (command != null) {
+            this.command = command.split(" ");
+        } else {
+            this.command = new String[0];
+        }
     }
 
     public DataVolumes getDataVolumes() {
@@ -51,14 +76,14 @@ public class Whisper {
     }
 
     public void setDataVolumes(List<String> volumes) {
-        if (volumes != null) {
-            this.dataVolumes = new DataVolumes(volumes);
-        }
+        this.dataVolumes = new DataVolumes(volumes);
     }
 
     public void setPortMapping(List<String> ports) throws MojoExecutionException {
-        if (ports != null) {
-            this.portMapping = new PortMapping(ports);
-        }
+        this.portMapping = new PortMapping(ports);
+    }
+
+    public PortMapping getPortMapping() {
+        return portMapping;
     }
 }
