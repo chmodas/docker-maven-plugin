@@ -15,6 +15,7 @@ public class Whisper {
     private String[] command;
     private DataVolumes dataVolumes;
     private PortMapping portMapping;
+    private ContainerLinks containerLinks;
 
     public Whisper() {
     }
@@ -85,5 +86,13 @@ public class Whisper {
 
     public PortMapping getPortMapping() {
         return portMapping;
+    }
+
+    public ContainerLinks getContainerLinks() {
+        return containerLinks;
+    }
+
+    public void setContainerLinks(String containerName, String prefix, List<String> links) throws MojoExecutionException {
+        this.containerLinks = new ContainerLinks(containerName, prefix, links);
     }
 }

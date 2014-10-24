@@ -1,5 +1,6 @@
 package com.github.chmodas.test.mojo.util;
 
+import com.github.chmodas.mojo.util.ContainerLinks;
 import com.github.chmodas.mojo.util.DataVolumes;
 import com.github.chmodas.mojo.util.PortMapping;
 import com.github.chmodas.mojo.util.Whisper;
@@ -78,5 +79,15 @@ public class WhisperTest {
         whisper.setPortMapping(new ArrayList<String>() {{
         }});
         assertThat(whisper.getPortMapping(), is(instanceOf(PortMapping.class)));
+    }
+
+    @Test
+    public void canSetContainerLinks() throws Exception {
+        Whisper whisper = new Whisper();
+        assertThat(whisper.getContainerLinks(), is(equalTo(null)));
+
+        whisper.setContainerLinks("boohoo", "chmodas-test", new ArrayList<String>() {{
+        }});
+        assertThat(whisper.getContainerLinks(), is(instanceOf(ContainerLinks.class)));
     }
 }
