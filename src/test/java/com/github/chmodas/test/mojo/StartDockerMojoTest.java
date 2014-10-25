@@ -219,4 +219,62 @@ public class StartDockerMojoTest extends BaseTest {
         assertThat(hostPaths, contains("/null", "/host"));
         assertThat(containerPaths, contains("/volume1", "/volume2"));
     }
+
+    public void testWillThrowExceptionWhenContainerAliasIsAlreadyInUse() throws Exception {
+        List<Image> images = new ArrayList<>();
+        Image image = genImageObj("boohoo");
+        image.setLinks(new ArrayList<String>() {{
+            add("container:alias");
+            add("container:alias");
+        }});
+        images.add(image);
+        setVariableValueToObject(mojo, "images", images);
+
+        try {
+            mojo.execute();
+            fail("MojoExecutionException is not thrown.");
+        } catch (MojoExecutionException e) {
+            assertThat(e.getMessage(), is(equalTo("A link for container 'container' with alias 'alias' exists already.")));
+        }
+    }
+
+    public void testWillThrowExceptionWhenContainerLinkIsImpossible() throws Exception {
+        List<Image> images = new ArrayList<>();
+        Image image = genImageObj("boohoo");
+        image.setLinks(new ArrayList<String>() {{
+            add("container:alias");
+        }});
+        images.add(image);
+        setVariableValueToObject(mojo, "images", images);
+
+        try {
+            mojo.execute();
+            fail("MojoExecutionException not thrown.");
+        } catch (MojoExecutionException e) {
+            assertThat(e.getMessage(), is(equalTo("Container 'container' does not exist, cannot link to it.")));
+        }
+    }
+
+    public void testCanLinkContainers() throws Exception {
+        List<Image> images = new ArrayList<>();
+        Image image1 = genImageObj("one");
+        Image image2 = genImageObj("two");
+        image2.setLinks(new ArrayList<String>(){{
+            add("one:one");
+        }});
+        images.add(image1);
+        images.add(image2);
+        setVariableValueToObject(mojo, "images", images);
+
+        mojo.execute();
+
+        String containerIdOne = getContainerIdByName("one");
+        assertThat(containerIdOne, is(not(nullValue())));
+        String containerIdTwo = getContainerIdByName("two");
+        assertThat(containerIdTwo, is(not(nullValue())));
+
+        InspectContainerResponse inspectContainerResponse = dockerClient.inspectContainerCmd(containerIdTwo).exec();
+        assertThat(inspectContainerResponse.getHostConfig().getLinks(), is(notNullValue()));
+        assertThat(inspectContainerResponse.getHostConfig().getLinks(), equalTo(new String[] {"/chmodas-test-one:/chmodas-test-two/one"}));
+    }
 }

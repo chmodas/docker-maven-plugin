@@ -42,6 +42,7 @@ public class DockerWhisperer {
          * Clean start.
          */
         PortMapping.Used.reset();
+        ContainerLinks.Used.reset();
 
         /**
          * Perform some sanitation.
@@ -54,9 +55,11 @@ public class DockerWhisperer {
             whisper.setCommand(image.getCommand());
             whisper.setDataVolumes(image.getVolumes());
             whisper.setPortMapping(image.getPorts());
+            whisper.setContainerLinks(image.getName(), prefix, image.getLinks());
 
             whispers.add(whisper);
         }
+        ContainerLinks.Used.verify();
 
         /**
          * Pull the images if necessary.
@@ -81,7 +84,8 @@ public class DockerWhisperer {
             StartContainerCmd startContainerCmd = dockerClient
                     .startContainerCmd(container.getId())
                     .withPortBindings(x.getPortMapping().getPortsBinding())
-                    .withBinds(x.getDataVolumes().getBinds());
+                    .withBinds(x.getDataVolumes().getBinds())
+                    .withLinks(x.getContainerLinks().getLinks());
 
             startContainerCmd.exec();
 
