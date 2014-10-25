@@ -50,4 +50,18 @@ public class ContainerLinksTest {
         containerLinks = new ContainerLinks("boohoo", "chmodas-test", links);
         assertThat(containerLinks.getLinks(), is(equalTo(new Link[]{new Link("chmodas-test-container", "container"), new Link("chmodas-test-container2", "container2")})));
     }
+
+    @Test
+    public void willThrowExceptionWhenContainerLinkIsImpossible() throws Exception {
+        try {
+            List<String> links = new ArrayList<>();
+            links.add("container:container");
+            new ContainerLinks("boohoo", "chmodas-test", links);
+            ContainerLinks.Used.verify();
+            fail("MojoExecutionException not thrown.");
+        } catch (MojoExecutionException e) {
+            assertThat(e.getMessage(), is(equalTo("Container 'container' does not exist, cannot link to it.")));
+        }
+    }
+
 }

@@ -68,8 +68,14 @@ public class ContainerLinks {
             usedLinks = new HashMap<>();
         }
 
-        public static void verify() {
-
+        public static void verify() throws MojoExecutionException {
+            for (Map.Entry<String, List<String>> entry : usedLinks.entrySet()) {
+                for (String link : entry.getValue()) {
+                    if (!usedLinks.containsKey(link)) {
+                        throw new MojoExecutionException("Container '" + link + "' does not exist, cannot link to it.");
+                    }
+                }
+            }
         }
 
         private static void addContainer(String name) {
