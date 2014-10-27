@@ -8,13 +8,20 @@ import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.StartContainerCmd;
 import com.github.dockerjava.api.model.Container;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.LineIterator;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The whisperer does the talkin'.
@@ -104,9 +111,30 @@ public class DockerWhisperer {
         }
     }
 
-    void pullImages(List<Image> images) {
+    void pullImages(List<Image> images) throws MojoExecutionException {
         for (Image x : images) {
-            dockerClient.pullImageCmd(x.getRepository()).withTag(x.getTag()).exec();
+            InputStream stream = dockerClient.pullImageCmd(x.getRepository()).withTag(x.getTag()).exec();
+            String response = asString(stream);
+
+            if (!response.contains("Download complete")) {
+                throw new MojoExecutionException("Could not download image '" + x.getRepository() + ":" + x.getTag() + "'");
+            }
+        }
+    }
+
+    String asString(InputStream response) {
+        try {
+            StringWriter logwriter = new StringWriter();
+            LineIterator itr = IOUtils.lineIterator(response, "UTF-8");
+            while (itr.hasNext()) {
+                String line = itr.next();
+                logwriter.write(line + (itr.hasNext() ? "\n" : ""));
+            }
+            return logwriter.toString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            IOUtils.closeQuietly(response);
         }
     }
 
@@ -117,7 +145,6 @@ public class DockerWhisperer {
      */
     public void stopContainers(List<Image> images) {
         Map<String, String> containerIds = getStartedContainerIds();
-
         for (Image x : images) {
             if (containerIds.containsKey(x.getName())) {
                 String containerId = containerIds.get(x.getName());
@@ -143,11 +170,15 @@ public class DockerWhisperer {
     private Map<String, String> getStartedContainerIds() {
         Map<String, String> containersIds = new HashMap<>();
 
+        Pattern pattern = Pattern.compile("^/" + prefix + "-([a-z-]+)$");
         List<Container> containers = dockerClient.listContainersCmd().withShowAll(true).exec();
         for (Container x : containers) {
-            if (x.getNames()[0].contains("/" + prefix + "-")) {
-                String nameWithoutPrefix = x.getNames()[0].replace("/" + prefix + "-", "");
-                containersIds.put(nameWithoutPrefix, x.getId());
+            for (String y : x.getNames()) {
+                Matcher matcher = pattern.matcher(y);
+                if (matcher.matches()) {
+                    containersIds.put(matcher.group(1), x.getId());
+                    break;
+                }
             }
         }
 
