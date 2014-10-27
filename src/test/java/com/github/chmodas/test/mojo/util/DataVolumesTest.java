@@ -78,4 +78,19 @@ public class DataVolumesTest {
         assertThat(dataVolumes.getBinds()[0], is(equalTo(new Bind("/host", new Volume("/volume")))));
         assertThat(dataVolumes.getBinds()[1], is(equalTo(new Bind("/host2", new Volume("/volume2")))));
     }
+
+    @Test
+    public void canHandleRelativePaths() throws Exception {
+        List<String> volumes = new ArrayList<>();
+        volumes.add(".:/volume1");
+        volumes.add("../directory:/volume2");
+
+        String projectDir = System.getProperty("user.dir");
+
+        DataVolumes dataVolumes = new DataVolumes(volumes);
+        assertThat(dataVolumes.getBinds(), is(not(equalTo(null))));
+        assertThat(dataVolumes.getBinds().length, is(equalTo(2)));
+        assertThat(dataVolumes.getBinds()[0], is(equalTo(new Bind(projectDir + "/.", new Volume("/volume1")))));
+        assertThat(dataVolumes.getBinds()[1], is(equalTo(new Bind(projectDir + "/../directory", new Volume("/volume2")))));
+    }
 }

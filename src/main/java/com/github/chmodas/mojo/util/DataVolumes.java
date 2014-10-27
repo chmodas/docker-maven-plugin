@@ -3,6 +3,7 @@ package com.github.chmodas.mojo.util;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Volume;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -59,7 +60,8 @@ public class DataVolumes {
             Bind[] bindArray = new Bind[binds.size()];
             Integer i = 0;
             for (Map.Entry<String, Volume> bind : binds.entrySet()) {
-                bindArray[i] = new Bind(bind.getKey(), bind.getValue());
+                File file = new File(bind.getKey());
+                bindArray[i] = new Bind(file.getAbsolutePath(), bind.getValue());
                 i++;
             }
             return bindArray;
