@@ -90,4 +90,13 @@ public class WhisperTest {
         }});
         assertThat(whisper.getContainerLinks(), is(instanceOf(ContainerLinks.class)));
     }
+
+    @Test
+    public void canSetWait() throws Exception {
+        Whisper whisper = new Whisper();
+        assertThat(whisper.getWait(), is(equalTo(0)));
+
+        whisper.setWait(5);
+        assertThat(whisper.getWait(), is(equalTo(5)));
+    }
 }

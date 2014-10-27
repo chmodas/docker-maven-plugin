@@ -56,6 +56,7 @@ public class DockerWhisperer {
             whisper.setDataVolumes(image.getVolumes());
             whisper.setPortMapping(image.getPorts());
             whisper.setContainerLinks(image.getName(), prefix, image.getLinks());
+            whisper.setWait(image.getWait());
 
             whispers.add(whisper);
         }
@@ -91,6 +92,14 @@ public class DockerWhisperer {
 
             for (Map.Entry<String, String> entry : x.getPortMapping().getDynamicPortsBinding(dockerClient, container.getId()).entrySet()) {
                 mavenProject.getProperties().setProperty(entry.getKey(), entry.getValue());
+            }
+
+            if (x.getWait() > 0) {
+                try {
+                    Thread.sleep(x.getWait() * 1000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
         }
     }

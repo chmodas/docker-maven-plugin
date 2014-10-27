@@ -16,6 +16,7 @@ public class Whisper {
     private DataVolumes dataVolumes;
     private PortMapping portMapping;
     private ContainerLinks containerLinks;
+    private Integer wait;
 
     public Whisper() {
     }
@@ -94,5 +95,16 @@ public class Whisper {
 
     public void setContainerLinks(String containerName, String prefix, List<String> links) throws MojoExecutionException {
         this.containerLinks = new ContainerLinks(containerName, prefix, links);
+    }
+
+    public Integer getWait() {
+        if (wait == null) {
+            return 0;
+        }
+        return wait;
+    }
+
+    public void setWait(Integer wait) {
+        this.wait = wait;
     }
 }

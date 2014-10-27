@@ -82,6 +82,7 @@ In order to use the docker-maven-plugin, you need to add the following configura
 | __ports/port__ | Docker exposed port to publish.  Format is [hostPort:exposedPort]            | none           |
 | __volumes__    | List of volumes to mount inside the container. (e.g. /volume, /host:/volume) | none           |
 | __links__      | List of links to containers                                                  | none           |
+| __wait__       | Sleep for given amount of seconds after container has been started           | 0              |
 
 ## Best Practices
 

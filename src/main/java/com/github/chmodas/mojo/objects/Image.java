@@ -10,6 +10,7 @@ public class Image {
     private List<String> ports;
     private List<String> volumes;
     private List<String> links;
+    private Integer wait;
 
     public Image() {
     }
@@ -68,5 +69,13 @@ public class Image {
 
     public void setLinks(List<String> links) {
         this.links = links;
+    }
+
+    public Integer getWait() {
+        return wait;
+    }
+
+    public void setWait(Integer wait) {
+        this.wait = wait;
     }
 }
