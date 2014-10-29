@@ -64,6 +64,7 @@ public class DockerWhisperer {
             whisper.setPortMapping(image.getPorts());
             whisper.setContainerLinks(image.getName(), prefix, image.getLinks());
             whisper.setWait(image.getWait());
+            whisper.setHostname(image.getHostname());
 
             whispers.add(whisper);
         }
@@ -86,6 +87,9 @@ public class DockerWhisperer {
                     .withExposedPorts(x.getPortMapping().getExposedPorts())
                     .withVolumes(x.getDataVolumes().getVolumes())
                     .withCmd(x.getCommand());
+            if (x.getHostname() != null) {
+                createContainerCmd.withHostName(x.getHostname());
+            }
 
             CreateContainerResponse container = createContainerCmd.exec();
 

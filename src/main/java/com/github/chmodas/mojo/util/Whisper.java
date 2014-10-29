@@ -17,6 +17,7 @@ public class Whisper {
     private PortMapping portMapping;
     private ContainerLinks containerLinks;
     private Integer wait;
+    private String hostname;
 
     public Whisper() {
     }
@@ -106,5 +107,13 @@ public class Whisper {
 
     public void setWait(Integer wait) {
         this.wait = wait;
+    }
+
+    public String getHostname() {
+        return hostname;
+    }
+
+    public void setHostname(String hostname) {
+        this.hostname = hostname;
     }
 }

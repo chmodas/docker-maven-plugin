@@ -99,4 +99,13 @@ public class WhisperTest {
         whisper.setWait(5);
         assertThat(whisper.getWait(), is(equalTo(5)));
     }
+
+    @Test
+    public void canSetHostname() throws Exception {
+        Whisper whisper = new Whisper();
+        assertThat(whisper.getHostname(), is(equalTo(null)));
+
+        whisper.setHostname("hostname");
+        assertThat(whisper.getHostname(), is(equalTo("hostname")));
+    }
 }

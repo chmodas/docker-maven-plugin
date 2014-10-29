@@ -11,6 +11,7 @@ public class Image {
     private List<String> volumes;
     private List<String> links;
     private Integer wait;
+    private String hostname;
 
     public Image() {
     }
@@ -77,5 +78,13 @@ public class Image {
 
     public void setWait(Integer wait) {
         this.wait = wait;
+    }
+
+    public String getHostname() {
+        return hostname;
+    }
+
+    public void setHostname(String hostname) {
+        this.hostname = hostname;
     }
 }
