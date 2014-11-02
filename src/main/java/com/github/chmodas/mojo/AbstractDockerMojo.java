@@ -98,4 +98,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
 
         return DockerClientBuilder.getInstance(builder.build()).build();
     }
+
+    /**
+     * @param string A string that has to be prefixed with the plugin prefix.
+     * @return The prefixed string.
+     */
+    protected String getPrefixed(String string) {
+        return prefix + "-" + string;
+    }
 }
