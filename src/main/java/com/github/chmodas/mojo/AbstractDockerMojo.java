@@ -1,6 +1,5 @@
 package com.github.chmodas.mojo;
 
-import com.github.chmodas.mojo.objects.Image;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.DockerException;
 import com.github.dockerjava.core.DockerClientBuilder;
@@ -12,7 +11,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
 import java.net.URI;
-import java.util.List;
 
 public abstract class AbstractDockerMojo extends AbstractMojo {
     /**
@@ -34,22 +32,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo {
     protected String version;
 
     /**
-     * Docker images configuration.
-     */
-    @Parameter(property = "docker.images")
-    protected List<Image> images;
-
-    /**
      * Namespace prefix used for isolation.
      */
     @Parameter(property = "docker.prefix", defaultValue = "${project.artifactId}")
     protected String prefix;
-
-    /**
-     * Docker will auto pull any configured image. Set this to false to prevent that.
-     */
-    @Parameter(property = "docker.pullImages", defaultValue = "true")
-    protected Boolean pullImages;
 
     /**
      * Skip execution.
