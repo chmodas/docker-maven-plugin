@@ -105,6 +105,10 @@ public class StartDockerMojoTest extends BaseTest {
     }
 
     public void testThatCanStartContainerWithBareMinimumParameters() throws Exception {
+        MavenProject project = (MavenProject) getVariableValueFromObject(mojo, "project");
+
+        assertThat(project.getProperties().getProperty("one.container.id"), is(nullValue()));
+
         setVariableValueToObject(mojo, "images", genImages(false, "one"));
         mojo.execute();
 
@@ -120,6 +124,7 @@ public class StartDockerMojoTest extends BaseTest {
         assertThat(response.getState().getExitCode(), is(equalTo(0)));
         assertThat(response.getName(), is(equalTo("/chmodas-test-one")));
         assertThat(response.getConfig().getImage(), is(equalTo("busybox:latest")));
+        assertThat(project.getProperties().getProperty("one.container.id"), is(not(nullValue())));
     }
 
     public void testThatCanStartContainerWithCommandSpecified() throws Exception {

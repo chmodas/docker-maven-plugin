@@ -90,6 +90,8 @@ public class StartDockerMojo extends AbstractDockerMojo {
                     Thread.currentThread().interrupt();
                 }
             }
+
+            project.getProperties().setProperty(image.getName() + ".container.id", cmd.getContainerId());
         }
     }
 
