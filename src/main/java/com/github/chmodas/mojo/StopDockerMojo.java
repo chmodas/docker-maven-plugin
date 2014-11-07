@@ -30,6 +30,8 @@ public class StopDockerMojo extends AbstractDockerMojo {
         Map<String, String> containerIds = getStartedContainerIds(dockerClient);
         for (StopImage image : images) {
             if (containerIds.containsKey(image.getName())) {
+                getLog().info("Stopping container " + image.getName() + ".");
+
                 String containerId = containerIds.get(image.getName());
                 try {
                     try {

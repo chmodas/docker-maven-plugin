@@ -55,6 +55,8 @@ public class StartDockerMojo extends AbstractDockerMojo {
          */
         Map<StartImage, StartContainerCmd> imageStartContainerCmdMap = new LinkedHashMap<>();
         for (StartImage image : images) {
+            getLog().info("Attempting to create container '" + image.getName() + "' from image " + image.getRepository() + ":" + image.getTag() + ".");
+
             CreateContainerCmd createContainerCmd = dockerClient
                     .createContainerCmd(image.getRepository() + ":" + image.getTag())
                     .withName(getPrefixed(image.getName()))
@@ -70,12 +72,16 @@ public class StartDockerMojo extends AbstractDockerMojo {
                     .withLinks(image.getContainerLinks(image.getName(), prefix).getLinks());
 
             imageStartContainerCmdMap.put(image, startContainerCmd);
+
+            getLog().info("Container '" + image.getName() + "' created.");
         }
         ContainerLinks.Used.verify();
 
         for (Map.Entry<StartImage, StartContainerCmd> entry : imageStartContainerCmdMap.entrySet()) {
             StartImage image = entry.getKey();
             StartContainerCmd cmd = entry.getValue();
+
+            getLog().info("Attempting to start container " + image.getName() + ".");
 
             cmd.exec();
 
@@ -92,17 +98,23 @@ public class StartDockerMojo extends AbstractDockerMojo {
             }
 
             project.getProperties().setProperty(image.getName() + ".container.id", cmd.getContainerId());
+
+            getLog().info("Container '" + image.getName() + "' started.");
         }
     }
 
     private void pullImages(DockerClient dockerClient, List<StartImage> images) throws MojoExecutionException {
         for (StartImage x : images) {
+            getLog().info("Downloading image " + x.getRepository() + ":" + x.getTag() + ".");
+
             InputStream stream = dockerClient.pullImageCmd(x.getRepository()).withTag(x.getTag()).exec();
             String response = asString(stream);
 
             if (!response.contains("Download complete") && !response.contains("Image is up to date")) {
                 throw new MojoExecutionException("Could not download image '" + x.getRepository() + ":" + x.getTag() + "'");
             }
+
+            getLog().info("Image " + x.getRepository() + ":" + x.getTag() + " downloaded.");
         }
     }
 
