@@ -71,6 +71,14 @@
         </dependency>
 
         <!-- Testing -->
+
+        <!-- JMockit needs to be ordered before JUnit in order to function correctly -->
+        <dependency>
+            <groupId>com.googlecode.jmockit</groupId>
+            <artifactId>jmockit</artifactId>
+            <version>1.7</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
