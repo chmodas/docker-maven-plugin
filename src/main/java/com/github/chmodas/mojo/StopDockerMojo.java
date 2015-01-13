@@ -55,7 +55,7 @@ public class StopDockerMojo extends AbstractDockerMojo {
     private Map<String, String> getStartedContainerIds(DockerClient dockerClient) {
         Map<String, String> containersIds = new HashMap<>();
 
-        Pattern pattern = Pattern.compile("^/" + prefix + "-([a-z-]+)$");
+        Pattern pattern = Pattern.compile("^/" + prefix + "-([a-zA-Z0-9-]+)$");
         List<Container> containers = dockerClient.listContainersCmd().withShowAll(true).exec();
         for (Container x : containers) {
             for (String y : x.getNames()) {
