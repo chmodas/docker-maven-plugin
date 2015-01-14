@@ -20,7 +20,7 @@ In order to use the docker-maven-plugin, you need to add the following configura
                 <plugin>
                     <groupId>com.github.chmodas</groupId>
                     <artifactId>docker-maven-plugin</artifactId>
-                    <version>0.0.4</version>
+                    <version>0.0.5</version>
 
                     <!-- common configuration shared by all executions -->
                     <configuration>
