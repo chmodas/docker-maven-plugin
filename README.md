@@ -25,6 +25,7 @@ In order to use the docker-maven-plugin, you need to add the following configura
                     <!-- common configuration shared by all executions -->
                     <configuration>
                         <url></url>
+                        <pullImages>true</pullImages>
                         <images>
                             <image>
                                 <name></name>
@@ -64,12 +65,13 @@ In order to use the docker-maven-plugin, you need to add the following configura
 
 ### General Configuration
 
-| Parameter   | Description                                                 | Property           | Default                   |
-|-------------|-------------------------------------------------------------|--------------------|---------------------------|
-| __url__     | URL to the Docker daemon API                                | __docker.url__     | __http://localhost:4243__ |
-| __version__ | Docker API version to use                                   | __docker.version__ | __1.14__                  |
-| __prefix__  | Prefix used when naming containers                          | __docker.prefix__  | __project.artifactId__    |
-| __images__  | List of [image](#image) parameters for starting containers  | __docker.images__  | none                      |
+| Parameter      | Description                                                | Property              | Default                   |
+|----------------|------------------------------------------------------------|-----------------------|---------------------------|
+| __url__        | URL to the Docker daemon API                               | __docker.url__        | __http://localhost:4243__ |
+| __version__    | Docker API version to use                                  | __docker.version__    | __1.15__                  |
+| __prefix__     | Prefix used when naming containers                         | __docker.prefix__     | __project.artifactId__    |
+| __images__     | List of [image](#image) parameters for starting containers | __docker.images__     | none                      |
+| __pullImages__ | Pull the images or use local ones                          | __docker.pullImages__ | true                      |
 
 
 ### Image Configuration
@@ -86,6 +88,7 @@ In order to use the docker-maven-plugin, you need to add the following configura
 | __links__      | List of links to containers                                                  | none             |
 | __wait__       | Sleep for given amount of seconds after container has been started           | 0                |
 | __hostname__   | Set the container hostname                                                   | the container id |
+| __env__        | Set env variables inside a container (<env><k>v</k><k2>v</k2></env>)         | none             |
 
 
 ## Best Practices
