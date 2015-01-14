@@ -14,6 +14,7 @@ import org.apache.maven.project.MavenProject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -311,5 +312,23 @@ public class StartDockerMojoTest extends BaseTest {
         InspectContainerResponse inspectContainerResponse = dockerClient.inspectContainerCmd(containerIdTwo).exec();
         assertThat(inspectContainerResponse.getHostConfig().getLinks(), is(notNullValue()));
         assertThat(inspectContainerResponse.getHostConfig().getLinks(), equalTo(new String[]{"/chmodas-test-one:/chmodas-test-two/one"}));
+    }
+
+    public void testThatCanStartContainerWithEnv() throws Exception {
+        List<StartImage> images = genImages("one");
+        images.get(0).setEnv(new HashMap<String, String>() {{
+            put("VARIABLE", "success");
+        }});
+
+        setVariableValueToObject(mojo, "images", images);
+        mojo.execute();
+
+        String containerId = getContainerIdByName("one");
+        assertThat(containerId, is(notNullValue()));
+
+        InspectContainerResponse inspectContainerResponse = dockerClient.inspectContainerCmd(containerId).exec();
+        assertThat(
+                Arrays.asList(inspectContainerResponse.getConfig().getEnv()),
+                containsInAnyOrder("VARIABLE=success", "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"));
     }
 }

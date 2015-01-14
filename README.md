@@ -61,6 +61,7 @@ In order to use the docker-maven-plugin, you need to add the following configura
     </project>
 ```
 
+
 ### General Configuration
 
 | Parameter   | Description                                                 | Property           | Default                   |
@@ -70,19 +71,22 @@ In order to use the docker-maven-plugin, you need to add the following configura
 | __prefix__  | Prefix used when naming containers                          | __docker.prefix__  | __project.artifactId__    |
 | __images__  | List of [image](#image) parameters for starting containers  | __docker.images__  | none                      |
 
+
 ### Image Configuration
 
-| Parameter      | Description                                                                  | Default        |
-|----------------|------------------------------------------------------------------------------|----------------|
-| __name__       | The name of the container, essential for container linking                   | none, required |
-| __repository__ | Image repository (e.g. example.com/postgres, username/postgres)              | none, required |
-| __tag__        | The image repository tag                                                     | latest         |
-| __command__    | Command to execute inside the container on start                             | none           |
-| __ports__      | Collection of ports to publish                                               | none           |
-| __ports/port__ | Docker exposed port to publish.  Format is [hostPort:exposedPort]            | none           |
-| __volumes__    | List of volumes to mount inside the container. (e.g. /volume, /host:/volume) | none           |
-| __links__      | List of links to containers                                                  | none           |
-| __wait__       | Sleep for given amount of seconds after container has been started           | 0              |
+| Parameter      | Description                                                                  | Default          |
+|----------------|------------------------------------------------------------------------------|------------------|
+| __name__       | The name of the container, essential for container linking                   | none, required   |
+| __repository__ | Image repository (e.g. example.com/postgres, username/postgres)              | none, required   |
+| __tag__        | The image repository tag                                                     | latest           |
+| __command__    | Command to execute inside the container on start                             | none             |
+| __ports__      | Collection of ports to publish                                               | none             |
+| __ports/port__ | Docker exposed port to publish.  Format is [hostPort:exposedPort]            | none             |
+| __volumes__    | List of volumes to mount inside the container. (e.g. /volume, /host:/volume) | none             |
+| __links__      | List of links to containers                                                  | none             |
+| __wait__       | Sleep for given amount of seconds after container has been started           | 0                |
+| __hostname__   | Set the container hostname                                                   | the container id |
+
 
 ## Best Practices
 

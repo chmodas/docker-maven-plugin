@@ -63,7 +63,8 @@ public class StartDockerMojo extends AbstractDockerMojo {
                     .withCmd(image.getCommand())
                     .withHostName(image.getHostname())
                     .withVolumes(image.getDataVolumes().getVolumes())
-                    .withExposedPorts(image.getPortMapping().getExposedPorts());
+                    .withExposedPorts(image.getPortMapping().getExposedPorts())
+                    .withEnv(image.getEnv());
 
             StartContainerCmd startContainerCmd = dockerClient
                     .startContainerCmd(createContainerCmd.exec().getId())

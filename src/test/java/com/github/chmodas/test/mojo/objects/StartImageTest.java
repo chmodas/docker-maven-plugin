@@ -6,6 +6,8 @@ import com.github.chmodas.mojo.util.PortMapping;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Test;
 
+import java.util.HashMap;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.fail;
@@ -90,5 +92,22 @@ public class StartImageTest {
         image = new StartImage();
         image.setWait(666);
         assertThat(image.getWait(), is(equalTo(666 * 1000)));
+    }
+
+    @Test
+    public void getEnvironmentVariablesWillReturnTheExpectedResult() throws Exception {
+        StartImage image = new StartImage();
+        assertThat(image.getEnv(), is(equalTo(new String[0])));
+
+        HashMap<String, String> env = new HashMap<>();
+        env.put("var1", "val1");
+        env.put("var2", "val2");
+
+        image = new StartImage();
+        image.setEnv(env);
+
+        assertThat(image.getEnv().length, is(equalTo(2)));
+        assertThat(image.getEnv(), hasItemInArray("var1=val1"));
+        assertThat(image.getEnv(), hasItemInArray("var2=val2"));
     }
 }
