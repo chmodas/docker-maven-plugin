@@ -6,7 +6,6 @@ import com.github.chmodas.mojo.util.PortMapping;
 import org.apache.maven.plugin.MojoExecutionException;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +18,7 @@ public class StartImage extends AbstractImage {
     private List<String> ports;
     private List<String> links;
     private Integer wait;
-    private HashMap<String, String> envMap;
+    private HashMap<String, String> env;
 
     private DataVolumes dataVolumes;
     private PortMapping portMapping;
@@ -116,20 +115,20 @@ public class StartImage extends AbstractImage {
     }
 
     public String[] getEnv() {
-        if (envMap != null) {
-            String[] env = new String[envMap.size()];
+        if (env != null) {
+            String[] envArr = new String[env.size()];
             int i = 0;
-            for (Map.Entry<String, String> entry : envMap.entrySet()) {
-                env[i] = entry.getKey() + "=" + entry.getValue();
+            for (Map.Entry<String, String> entry : env.entrySet()) {
+                envArr[i] = entry.getKey() + "=" + entry.getValue();
                 i++;
             }
-            return env;
+            return envArr;
         }
 
         return new String[0];
     }
 
     public void setEnv(HashMap<String, String> env) {
-        this.envMap = env;
+        this.env = env;
     }
 }

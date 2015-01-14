@@ -2,6 +2,7 @@ package com.github.chmodas.mojo.objects;
 
 import org.apache.maven.plugin.MojoExecutionException;
 
+import java.util.HashMap;
 import java.util.List;
 
 abstract class AbstractImage {
@@ -14,6 +15,7 @@ abstract class AbstractImage {
     private List<String> ports;
     private List<String> links;
     private Integer wait;
+    private HashMap<String, String> env;
 
     public void setName(String name) {
         this.name = name;
@@ -57,5 +59,9 @@ abstract class AbstractImage {
 
     public void setWait(Integer wait) {
         this.wait = wait;
+    }
+
+    public void setEnv(HashMap<String, String> env) {
+        this.env = env;
     }
 }
